@@ -1,6 +1,7 @@
 <h1>Faça o Login</h1>
 <div class="login">
-    <form action="<?=URL?>/modulos/login/funLogin.php" method="post">
+	<!-- AQUI DEVEMOS UMA UM PARAMETRO PARA QUE AO LOGAR SEJA EXECUTADA UMA OPERACAO -->
+    <form action="<?=URL?>/modulos/login/funLogin.php?op=login" method="post">
     	<label for="email">E-mail</label>
     	<input type="email" name="email" id="email" required="required" />
     	<label for="senha">Senha</label>

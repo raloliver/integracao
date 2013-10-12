@@ -3,23 +3,23 @@
     <?
         $sql = mysql_query("SELECT * FROM produtos ORDER BY produto_id DESC");
         if (mysql_num_rows($sql)==TRUE) {
-            while ($ln = mysql_fetch_assoc($sql)) {
+            while ($row = mysql_fetch_assoc($sql)) {
     ?>
     <li>
-        <a href="index.php?mod=carrinho" title="<?=$ln['titulo']?>">
+        <a <?if (isset($_SESSION['user_id'])){?>href="modulos/loja/funLoja.php?op=add&produto_id=<?=$row['produto_id']?>"<?}else{?>href="#login" data-toggle="modal" <? }?> title="<?=$row['titulo']?>">
             <span class="img">
-                <img src="<?=URL?>/lib/rdmc.php?src=<?=URL?>/img/loja/<?=$ln['imagem']?>&q=160&h=100&w=160" alt="<?=$ln['titulo']?>">
+                <img src="<?=URL?>/lib/rdmc.php?src=<?=URL?>/img/loja/<?=$row['imagem']?>&q=160&h=100&w=160" alt="<?=$row['titulo']?>">
             </span>
             <span class="titulo">
-                <?=$ln['titulo']?>
+                <?=$row['titulo']?>
                 <span class="paragraph-end"></span>
             </span>
             <span class="subtitulo">
-                <?=$ln['subtitulo']?>
+                <?=$row['subtitulo']?>
                  <span class="paragraph-end"></span>
             </span>
             <span class="preco">
-                R$ <?=Real($ln['preco'])?>
+                R$ <?=Real($row['preco'])?>
             </span>
             <span class="comprar">
                 <i class="icon-shopping-cart"></i> Comprar

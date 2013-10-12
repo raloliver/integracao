@@ -18,6 +18,11 @@
 	            </div>
 	        </th>
             <th width="100">
+                <div class="text-center">
+                    Total
+                </div>
+            </th>
+            <th width="80">
 		        <div class="text-center">
 	            	Remover
 	            </div>
@@ -25,75 +30,84 @@
         </tr>
     </thead>
     <tbody>
+        <?
+        #CONECTAR COM A TABELA CARRINHO E TABELA PRODUTO
+            $sql = mysql_query("SELECT * 
+                                FROM carrinho
+                                INNER JOIN produtos
+                                #COMPARAR ID DA TABELA CARRINHO COM ID DA TABELA PRODUTO
+                                ON carrinho.produto_id = produtos.produto_id
+                                #TRAZER APENAS RESULTADOS SELECIONADOS
+                                WHERE carrinho.user_id = '".$_SESSION['user_id']."'
+                                ");
+            #VERIFICACAO
+            if (mysql_num_rows($sql)==TRUE) {
+                while ($row = mysql_fetch_assoc($sql)) {            
+        ?>
     	<tr>
         	<td width="160">
             	<div class="text-center">
-                	<a href="">
-	                    <img src="<?=URL?>/lib/rdmc.php?src=<?=URL?>/img/loja/tenis2.jpg&q=100&h=120&w=120" alt="">
+                    <!-- NESSE LINK PODE SER INSERIDO A PÁGINA DE DETALHAMENTO DO PRODUTO -->
+                	<a href="index.php" title="<?=$row['titulo']?>">
+	                    <img src="<?=URL?>/lib/rdmc.php?src=<?=URL?>/img/loja/<?=$row['imagem']?>&q=100&h=120&w=120" alt="<?=$row['titulo']?>">
 	                </a>
                 </div>
             </td>
         	<td>
             	<div class="text-left">
-                	Titulo Produto
+                	<?=$row['titulo']?>
+                </div>
+            </td>
+        	<td align="center" class="amount">
+                <div class="text-center">
+                    <!-- QUANTIDADE DO ITEM NO CARRINHO -->
+                    <form action="modulos/loja/funLoja.php?op=quant&carrinho_id=<?=$row['carrinho_id']?>" method="post">
+                        <!-- O CAMPO OCULTO E PARA INFORMAR O PRECO POIS O MESMO SERA UTILIZADO NA FUNCAO -->
+                        <input type="hidden" name="preco" value="<?=$row['preco']?>">
+                        <div class="input-append">
+                          <input type="number" name="quantidade" min="1" max="10" value="<?=$row['quantidade']?>">
+                          <button type="submit" class="btn"><i class="icon-refresh"></i></button>
+                        </div>
+                    </form>
                 </div>
             </td>
         	<td align="center">
-	            <div class="text-center">
-	            	1
-	            </div>
-            </td>
-        	<td align="center">
             	<div class="text-center">
-            		R$ 29,90
+            		R$ <?=Real($row['preco'])?>
+            </td>
+            <td align="center">
+                <div class="text-center">
+                    R$ <?=Real($row['total'])?>
                 </div>
             </td>
             <td align="center">
             	<div class="text-center">
-                	<a href=""><i class="icon-remove"></i></a>
+                	<a href="modulos/loja/funLoja.php?op=remove&carrinho_id=<?=$row['carrinho_id']?>"><i class="icon-remove"></i></a>
                 </div>
             </td>
         </tr>
+        <?
+            }
+        }else{          
+        ?>
         <tr>
-            <td width="160">
-                <div class="text-center">
-                    <a href="">
-                        <img src="<?=URL?>/lib/rdmc.php?src=<?=URL?>/img/loja/tenis4.jpg&q=100&h=120&w=120" alt="">
-                    </a>
-                </div>
-            </td>
-            <td>
-                <div class="text-left">
-                    Titulo Produto
-                </div>
-            </td>
-            <td align="center">
-                <div class="text-center">
-                    1
-                </div>
-            </td>
-            <td align="center">
-                <div class="text-center">
-                    R$ 29,90
-                </div>
-            </td>
-            <td align="center">
-                <div class="text-center">
-                    <a href=""><i class="icon-remove"></i></a>
-                </div>
+            <td colspan="6">
+                <div class="alert">Você ainda não adicionou nenhum produto ao carrinho!</div>
             </td>
         </tr>
+        <? }?>
     </tbody>
     <tfoot>
     	<tr>
-        	<td colspan="5" class="total">
+        	<td colspan="6" class="total">
             	<div class="text-right total">
-                	TOTAL: R$ 309,90
+                    <!-- EM ALGUNS CASOS SERÁ NECESSARIO VALIDAR SE A VARIAVEL E DIFERENTE DE VAZIO -->
+                	SUBTOTAL: R$ <? if (!empty($total_compra)) {echo $total_compra;}else{echo"0,00";}?>
                 </div>
             </td>
         </tr>
         <tr>
-        	<td colspan="2">
+        	<td colspan="3">
             	<a href="index.php" class="finalizar"><i class="icon-chevron-left"></i> Continuar Comprando</a>
             </td>
             <td colspan="3">
@@ -125,47 +139,174 @@
                 <?
                 	if($_GET['metodo']=='paypal'){
 				?>
-	                <form name="pedido" method="post" action="modulos/loja/funLoja.php?metodo=paypal">
+	                <form method="post" action="https://www.paypal.com/cgi-bin/webscr">
+                        <!-- Carrinho -->
+                        <input type="hidden" name="cmd" value="_cart" readonly="readonly" />
+                        <input type="hidden" name="upload" value="1" readonly="readonly" />
+
+                        <!-- Codificação -->
+                        <input type="hidden" name="charset" value="utf-8" readonly="readonly" />
+
+                        <!-- Moeda -->
+                        <input type="hidden" name="currency_code" value="BRL" readonly="readonly" />
+
+                        <!-- Seu ID ou E-mail de Vendedor -->
+                        <input type="hidden" name="business" value="" readonly="readonly" />
+
+                        <!-- Identificação Customizada -->
+                        <input type="hidden" name="custom" value="" readonly="readonly" />
+
+                        <!-- Sua logo -->
+                        <input type="hidden" name="cpp_logo_image" value="" readonly="readonly" />
+
+                        <!-- URL do Carrinho -->
+                        <input type="hidden" name="shopping_url" value="<?=URL?>/index.php?mod=carrinho" />
+
+                        <!-- URL Conclusão do Pedido -->
+                        <input type="hidden" name="return" value="<?=URL?>/index.php?mod=pedido-concluido" readonly="readonly" />
+
+                        <!-- URL de Notificação -->
+                        <input type="hidden" name="notify_url" value="<?=URL?>/modulos/loja/funPaypal.php" readonly="readonly" />
+
+                        <!-- Habilitando dados preenchido -->
+                        <input type="hidden" name="address_override" class="input-xlarge" value="1" readonly="readonly" />
+                        
+                        <!-- Dados do Cliente -->
+                        
+                        <!-- E-mail -->
 		                <label for="email">E-mail</label>
-		                <input type="email" name="email" id="email" class="input-xlarge" required />
+                        <input type="email" name="email" id="email" value="" required />
+
+                        <!-- Primeiro Nome -->
 		                <label for="nome">Nome</label>
-		                <input type="text" name="nome" id="nome" class="input-xlarge" required />
+                        <input type="text" name="first_name" id="nome" class="input-xlarge" value="" required/>
+		                
+                        <!-- Sobrenome -->
+                        <label for="sobrenome">Sobrenome</label>
+                        <input type="text" name="last_name" id="sobrenome" class="input-xlarge" required />
+                        
+                        <!-- CEP -->
 		                <label for="cep">CEP:</label>
-		                <input type="text" name="cep" id="cep" pattern="[0-9]{5}[\-]?[0-9]{3}" class="input-small" required />
-		                <label for="rua">Endereço:</label>
-		                <input type="text" name="rua" id="rua" class="input-xlarge" required />
-		                <label for="num">Número:</label>
-		                <input type="text" name="num" id="num" class="input-small" />
-		                <label for="comp">Complemento:</label>
-		                <input type="text" name="comp" id="comp" class="input-xlarge" />
+		                <input type="text" name="zip" id="cep" pattern="[0-9]{5}[\-]?[0-9]{3}" class="input-small" required />
+                        
+                        <!-- Endereço, Número e Complemento -->
+		                <label for="endereco">Endereço:</label>
+		                <input type="text" name="address1" id="endereco" class="input-xlarge" required />
+
+                        <!-- Bairro -->
 		                <label for="bairro">Bairro:</label>
-		                <input type="text" name="bairro" id="bairro" class="input-xlarge" required />
+		                <input type="text" name="address2" id="bairro" class="input-xlarge" />
+                        
+                        <!-- Cidade -->
 		                <label for="cidade">Cidade:</label>
-		                <input type="text" name="cidade" id="cidade" class="input-xlarge" required />
+		                <input type="text" name="city" id="cidade" class="input-xlarge" required />
+                        
+                        <!-- Estado -->
 		                <label for="uf">Estado:</label>
-		                <input type="text" name="uf" id="uf" class="input-mini" maxlength="2" required />
+		                <input type="text" name="state" id="uf" class="input-mini" maxlength="2" required />
+
+                        <!-- Dados dos Produtos -->
+                        <!-- Cod do Produto -->
+                        <input type="hidden" name="item_number_x" value="" readonly="readonly" />
+
+                        <!-- Titulo do Produto -->
+                        <input type="hidden" name="item_name_x" value="" readonly="readonly" />
+                        
+                        <!-- Quantidade de Itens -->
+                        <input type="hidden" name="quantity_x" value="" readonly="readonly" />
+                        
+                        <!-- Preço total do Produto -->
+                        <input type="hidden" name="amount_x" value="" readonly="readonly" />
+
                         <button type="submit" class="pague"><i class="icon-ok"></i> Finalizar Compra</button>
 	                </form>
                 <? }elseif($_GET['metodo']=='pagseguro'){ ?>
-                	<form name="pedido" method="post" action="modulos/loja/funLoja.php?metodo=pagseguro">
+                	<form method="post" action="https://pagseguro.uol.com.br/v2/checkout/payment.html">
+
+                        <!-- Codificação -->
+                        <input type="hidden" name="encoding" value="UTF-8" readonly="readonly" />
+
+                        <!-- Email vendedor -->
+                        <input type="hidden" name="receiverEmail" value="" readonly="readonly" />
+
+                        <!-- Moeda -->
+                        <input type="hidden" name="currency" value="BRL" readonly="readonly" />
+
+                        <!-- Identificação Customizada -->
+                        <input type="hidden" name="reference" value="" readonly="readonly" />
+
+                        <!-- Dados do Cliente -->
+
+                        <!-- E-mail -->
 		                <label for="email">E-mail</label>
-		                <input type="email" name="email" id="email" class="input-xlarge" required />
+		                <input type="email" name="senderEmail" id="email" class="input-xlarge" required />
+
+                        <!-- Nome Completo -->
 		                <label for="nome">Nome</label>
-		                <input type="text" name="nome" id="nome" class="input-xlarge" required />
+		                <input type="text" name="senderName" id="nome" class="input-xlarge" required />
+
+                        <!-- CEP -->
 		                <label for="cep">CEP:</label>
-		                <input type="text" name="cep" id="cep" pattern="[0-9]{5}[\-]?[0-9]{3}" class="input-small" required />
-		                <label for="rua">Endereço:</label>
-		                <input type="text" name="rua" id="rua" class="input-xlarge" required />
+		                <input type="text" name="shippingAddressPostalCode" id="cep" pattern="[0-9]{5}[\-]?[0-9]{3}" class="input-small" required />
+
+                        <!-- Endereço -->
+		                <label for="endereco">Endereço:</label>
+		                <input type="text" name="shippingAddressStreet" id="endereco" class="input-xlarge" required />
+    
+                        <!-- Número da Residência -->
 		                <label for="num">Número:</label>
-		                <input type="text" name="num" id="num" class="input-small" />
+		                <input type="text" name="shippingAddressNumber" id="num" class="input-small" />
+                        
+                        <!-- Complemento -->
 		                <label for="comp">Complemento:</label>
-		                <input type="text" name="comp" id="comp" class="input-xlarge" />
+		                <input type="text" name="shippingAddressComplement" id="comp" class="input-xlarge" />
+
+                        <!-- Bairro -->
 		                <label for="bairro">Bairro:</label>
-		                <input type="text" name="bairro" id="bairro" class="input-xlarge" required />
+		                <input type="text" name="shippingAddressDistrict" id="bairro" class="input-xlarge" required />
+
+                        <!-- Cidade -->
 		                <label for="cidade">Cidade:</label>
-		                <input type="text" name="cidade" id="cidade" class="input-xlarge" required />
+		                <input type="text" name="shippingAddressCity" id="cidade" class="input-xlarge" required />
+
+
 		                <label for="uf">Estado:</label>
-		                <input type="text" name="uf" id="uf" class="input-mini" maxlength="2" required />
+		                <input type="text" name="shippingAddressState" id="uf" class="input-mini" maxlength="2" required />
+
+                        <!-- País -->
+                        <input type="hidden" name="shippingAddressCountry" value="BRA" readonly="readonly" />
+
+                        
+                        <!-- Dados do Carrinho -->
+
+
+                        <!-- Formato do Frete 
+                        1 - PAC
+                        2 - Sedex
+                        3 - O Cliente escolhe Pac ou Sedex
+                        -->
+                        <input type="hidden" name="shippingType" value="3" />
+
+                        <!-- Dados dos Produtos -->
+
+                        <!-- ID do Produto -->
+                        <input type="hidden" name="itemIdx" value="" readonly="readonly" />
+
+                        <!-- Nome do Produto -->
+                        <input type="hidden" name="itemDescriptionx" value="" readonly="readonly" />
+
+                        <!-- Quantidade de Itens -->
+                        <input type="hidden" name="itemQuantityx" value="" readonly="readonly" />
+
+                        <!-- Preço do Produto -->
+                        <input type="hidden" name="itemAmountx" value="" readonly="readonly" />
+                        
+                        <!-- Preço do Frete 
+                        <input type="hidden" name="itemShippingCost<?=$i?>" value="9.90" readonly="readonly" /> -->
+
+                        <!-- Peso -->
+                        <input type="hidden" name="itemWeightx" value=""> 
+
                         <button type="submit" class="pague"><i class="icon-ok"></i> Finalizar Compra</button>
 	                </form>
                 <? } ?>
